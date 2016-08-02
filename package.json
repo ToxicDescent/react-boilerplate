@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node server.js",
+    "build": "NODE_ENV=production webpack --progress --profile --colors --config webpack.prod.config.js",
     "lint": "eslint -c .eslintrc src"
   },
   "author": "Patrick Haikal",
