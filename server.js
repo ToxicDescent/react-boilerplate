@@ -1,42 +1,32 @@
-const path = require('path');
+/* eslint-disable */
 const express = require('express');
-
-const port = process.env.PORT || 8080;
+const webpackDevMiddleware = require('webpack-dev-middleware');
+const webpackHotMiddleware = require('webpack-hot-middleware');
+const webpack = require('webpack');
+const config = require('./webpack.config');
 
 const app = express();
+const compiler = webpack(config);
 
-if (process.env.NODE_ENV !== 'production') {
-  const webpack = require('webpack');
-  const webpackDevMiddleware = require('webpack-dev-middleware');
-  const webpackHotMiddleware = require('webpack-hot-middleware');
-  const config = require('./webpack.dev.config');
-  const compiler = webpack(config);
-  const middleware = webpackDevMiddleware(compiler, {
-    publicPath: config.output.publicPath,
-    stats: {
-      colors: true,
-      hash: false,
-      timings: true,
-      chunks: false,
-      chunkModules: false,
-      modules: false,
-    },
-  });
+app.use(webpackDevMiddleware(compiler, {
+  hot: true,
+  filename: 'bundle.js',
+  publicPath: '/',
+  stats: {
+    colors: true,
+  },
+  historyApiFallback: true,
+}));
 
-  app.use(middleware);
-  app.use(webpackHotMiddleware(compiler));
-}
+app.use(webpackHotMiddleware(compiler, {
+  log: console.log,
+  path: '/__webpack_hmr',
+  heartbeat: 10 * 1000,
+}));
 
-app.use(express.static(path.join(__dirname + 'dist')));
+app.use(express.static(`${__dirname}/www`));
 
-app.get('*', function response(request, response) {
-  response.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
-});
-
-app.listen(port, '0.0.0.0', function onStart(error) {
-  if(error) {
-    console.error(error);
-  } else {
-    console.info('Listening on port %s. Open up http://0.0.0.0:%s/ in your browser.', port, port);
-  }
+const server = app.listen(8080, '0.0.0.0', () => {
+  const port = server.address().port;
+  console.log('Application is now listening at http://localhost:%s', port);
 });
